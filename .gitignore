@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+################
+# Custom Folders
+mlartifacts/
+mlruns/
+
 # Distribution / packaging
 .Python
 build/
