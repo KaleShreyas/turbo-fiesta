@@ -1,17 +1,18 @@
 datasets:
-  taxi:
+  renewable:
     column_mapping:
       categorical_features:
-        - 'PULocationID'
-        - 'DOLocationID'
-      numerical_features:
-        - 'trip_distance'
+        - '3'
+        - '5'
+        - '4'
+        - '1'
     data_format:
       header: true
       separator: ','
     monitors:
       - data_drift
-    reference_file: ./datasets/green_tripdata_2021-01.parquet
+      - regression_performance
+    reference_file: ./datasets/test.csv
 service:
   calculation_period_sec: 2
   min_reference_size: 30

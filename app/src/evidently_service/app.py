@@ -40,6 +40,7 @@ from evidently.model_monitoring import RegressionPerformanceMonitor
 from evidently.runner.loader import DataLoader
 from evidently.runner.loader import DataOptions
 
+from sklearn.preprocessing import LabelEncoder
 
 app = Flask(__name__)
 
@@ -70,13 +71,10 @@ class LoadedDataset:
 
 
 EVIDENTLY_MONITORS_MAPPING = {
-    "cat_target_drift": CatTargetDriftMonitor,
     "data_drift": DataDriftMonitor,
     "data_quality": DataQualityMonitor,
     "num_target_drift": NumTargetDriftMonitor,
-    "regression_performance": RegressionPerformanceMonitor,
-    "classification_performance": ClassificationPerformanceMonitor,
-    "prob_classification_performance": ProbClassificationPerformanceMonitor,
+    "regression_performance": RegressionPerformanceMonitor
 }
 
 
@@ -120,7 +118,8 @@ class MonitoringService:
         window_size = self.window_size
 
         if dataset_name in self.current:
-            current_data = self.current[dataset_name].append(new_rows, ignore_index=True)
+            # current_data = self.current[dataset_name].append(new_rows, ignore_index=True)
+            current_data = pd.concat([self.current[dataset_name], new_rows], ignore_index=True)
 
         else:
             current_data = new_rows
@@ -198,10 +197,8 @@ def configure_service():
     for dataset_name, dataset_options in config["datasets"].items():
         reference_file = dataset_options['reference_file']
         logging.info(f"Load reference data for dataset {dataset_name} from {reference_file}")
-        reference_data = pq.read_table(reference_file).to_pandas()
-        reference_data['duration'] = reference_data.lpep_dropoff_datetime - reference_data.lpep_pickup_datetime
-        reference_data.duration = reference_data.duration.apply(lambda td: td.total_seconds() / 60)
-        reference_data = reference_data[(reference_data.duration >= 1) & (reference_data.duration <= 60)]
+        reference_data = pd.read_csv(reference_file)
+
         datasets[dataset_name] = LoadedDataset(
             name=dataset_name,
             references=reference_data,
@@ -214,9 +211,8 @@ def configure_service():
 
 
 @app.route("/iterate/<dataset>", methods=["POST"])
-def iterate(dataset: str):
+def iterate(dataset):
     item = flask.request.json
-
     global SERVICE
     if SERVICE is None:
         return "Internal Server Error: service not found", 500

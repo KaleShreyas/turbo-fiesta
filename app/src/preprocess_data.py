@@ -78,6 +78,11 @@ def run_data_prep(raw_data_path: str, dest_path: str, dataset: str = "intermitte
     y_val = df_val[target].values
     y_test = df_test[target].values
 
+    # Drop the target
+    df_train.drop([target], axis=1, inplace=True)
+    df_val.drop([target], axis=1, inplace=True)
+    df_test.drop([target], axis=1, inplace=True)
+
     # Fit the DictVectorizer and preprocess data
     dv = DictVectorizer()
     X_train, dv = preprocess(df_train, dv, fit_dv=True)

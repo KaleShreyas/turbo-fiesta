@@ -3,7 +3,6 @@ import pickle
 import pandas as pd
 
 from sklearn.preprocessing import StandardScaler
-from sklearn.feature_extraction import DictVectorizer
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, f1_score, recall_score, accuracy_score, precision_score
 
@@ -28,7 +27,7 @@ def train_model(X_train, y_train):
         "random_state": 42,
         "n_jobs": -1
     }
-    rf = RandomForestRegressor(**best_params)
+    rf = RandomForestRegressor()
     rf.fit(X_train, y_train)
     print("training is complete")
     return rf
@@ -48,7 +47,7 @@ def save_model(model, dv):
 def apply_standard_scaling(df):
     ss = StandardScaler(with_mean=False)
     df_scaled = ss.fit_transform(df)
-    return df_scaled
+    return df_scaled, ss
 
 
 @task(name='Performance Metrics', retries=3)
@@ -57,6 +56,7 @@ def calculate_metrics(model, X_val, y_val):
     Calculates the score metrics for a test data
     '''
     y_pred = model.predict(X_val)
+    print(y_pred[:5])
 
     mae = mean_absolute_error(y_val, y_pred)
     r2 = r2_score(y_val, y_pred)
@@ -110,16 +110,16 @@ def run_train():
         model_name = "renewable-prediction-model"
         mlflow.set_tag("developer", "shreyas")
 
-        mlflow.set_tag("model_type", "logistic_regression")
-        X_train_scaled = apply_standard_scaling(X_train)
+        mlflow.set_tag("model_type", "random-forest-regressor")
+        X_train_scaled, ss = apply_standard_scaling(X_train)
         model = train_model(X_train_scaled, y_train)
 
         # metrics calculation
-        metrics_dict = calculate_metrics(model, X_val, y_val)
+        X_val_scaled = ss.transform(X_val)
+        metrics_dict = calculate_metrics(model, X_val_scaled, y_val)
         mlflow.log_metrics(metrics_dict)
 
-        dv = DictVectorizer()
-        save_model(model, dv)
+        save_model(model, ss)
         print("Model has been trained and saved")
 
         mlflow.sklearn.log_model(sk_model=model, artifact_path="model")
