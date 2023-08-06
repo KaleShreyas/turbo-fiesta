@@ -39,3 +39,4 @@ with open("target.csv", 'w') as f_target:
                             headers={"Content-Type": "application/json"},
                             data=json.dumps(send_row)).json()
         print(f"Prediction: {resp['renewable-prediction']}")
+        sleep(1)
