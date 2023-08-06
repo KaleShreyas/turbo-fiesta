@@ -19,17 +19,23 @@ def load_pickle(filename: str):
     
 data_path = "./output"
 X_test, y_test = load_pickle(os.path.join(data_path, "test.pkl"))
+print("Total data : ", X_test.shape)
 
 ndarray = X_test.toarray()
 data = ndarray.tolist()
 
+# Taking only few rows for quick run
+data = data[:25]
+y_test = y_test[:25]
+
 with open("target.csv", 'w') as f_target:
-    for row in data:
+    for idx, row in enumerate(data):
+        print("Row # ", idx)
         send_row = dict(enumerate(row, start=0))
-        print(send_row)
-        # f_target.write(f"{row['0']}\n")
+        print("Input :", send_row)
+        print("Actual : ", y_test[idx])
+        f_target.write(f"{X_test[idx]}\n")
         resp = requests.post("http://127.0.0.1:9696/predict",
                             headers={"Content-Type": "application/json"},
                             data=json.dumps(send_row)).json()
-        print(f"prediction: {resp['renewable-prediction']}")
-        sleep(1)
+        print(f"Prediction: {resp['renewable-prediction']}")

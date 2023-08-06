@@ -12,7 +12,7 @@ from pymongo import MongoClient
 
 MODEL_FILE = os.getenv('MODEL_FILE', 'model.bin')
 
-EVIDENTLY_SERVICE_ADDRESS = os.getenv('EVIDENTLY_SERVICE', 'http://127.0.0.1:5000')
+EVIDENTLY_SERVICE_ADDRESS = os.getenv('EVIDENTLY_SERVICE', 'http://127.0.0.1:8085')
 MONGODB_ADDRESS = os.getenv("MONGODB_ADDRESS", "mongodb://127.0.0.1:27017")
 
 with open(MODEL_FILE, 'rb') as f_in:
@@ -24,23 +24,13 @@ mongo_client = MongoClient(MONGODB_ADDRESS)
 db = mongo_client.get_database("prediction_service")
 collection = db.get_collection("data")
 
-def make_encoding(object):
-    if list(object.items())[0][1] == "Male":
-        object["Gender"] = "1"
-    else:
-        object["Gender"] = "0"
-    return object
-
 @app.route('/predict', methods=['POST'])
 def predict():
     object = request.get_json()
     object_df = pd.DataFrame([object])
-    # object_df.drop(['0'], axis=1, inplace=True)
 
     object_dv = dv.transform(object_df)
-    print(object_dv)
     pred = model.predict(object_dv)
-    print(pred)
     result = {
         'renewable-prediction': float(pred)
     }

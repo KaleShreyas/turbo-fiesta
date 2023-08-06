@@ -2,10 +2,10 @@ datasets:
   renewable:
     column_mapping:
       categorical_features:
+        - '0'
+        - '2'
         - '3'
-        - '5'
         - '4'
-        - '1'
     data_format:
       header: true
       separator: ','
